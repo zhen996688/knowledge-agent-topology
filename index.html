@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>知识库与 Agent 接入拓扑</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #142033;
+      --muted: #627087;
+      --line: #d8e1ee;
+      --paper: #ffffff;
+      --canvas: #f2f6fb;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --purple: #7c3aed;
+      --green: #15803d;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 16px;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 30px 32px;
+      border-radius: 20px 20px 0 0;
+      color: #ffffff;
+      background: linear-gradient(135deg, #11233f 0%, #183c6b 58%, #0f6f83 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #a9d5ff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 10px 0 0;
+      color: #d8e8f8;
+      font-size: 14px;
+    }
+
+    .canvas {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 20px 20px;
+      background: var(--paper);
+      box-shadow: 0 18px 45px rgba(25, 46, 79, .10);
+    }
+
+    .layer {
+      position: relative;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    .layer.gateway { border-left-color: var(--cyan); }
+    .layer.services { border-left-color: var(--purple); }
+    .layer.storage { border-left-color: var(--green); }
+
+    .layer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .layer-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .layer-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #e9f1ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    .badge.cyan { background: #e5f8fb; color: #0e7490; }
+    .badge.purple { background: #f1eafe; color: #6d28d9; }
+    .badge.green { background: #e8f7ec; color: #166534; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .node {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid #e1e8f2;
+      border-radius: 12px;
+      background: #f8fafc;
+      transition: transform .16s ease, border-color .16s ease;
+    }
+
+    .node:hover {
+      transform: translateY(-2px);
+      border-color: #b9c9df;
+    }
+
+    .node-title {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .node-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .device-index {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      margin-right: 7px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flow-arrow {
+      color: #0e7490;
+      font-size: 22px;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .connector {
+      display: flex;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      color: #7a8aa2;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .backup {
+      margin-top: 12px;
+      padding: 13px 16px;
+      border: 1px dashed #9fc2ad;
+      border-radius: 12px;
+      background: #f3fbf5;
+      color: #315d40;
+      font-size: 13px;
+    }
+
+    .path {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .path strong { color: var(--ink); }
+
+    @media (max-width: 680px) {
+      body { padding: 12px; }
+      .hero { padding: 24px 20px; }
+      h1 { font-size: 24px; }
+      .canvas { padding: 16px; }
+      .layer { padding: 16px; }
+      .layer-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .layer-head > * { min-width: 0; }
+      .layer-note {
+        max-width: none;
+        text-align: left;
+        overflow-wrap: anywhere;
+      }
+      .badge { white-space: normal; }
+      .grid, .grid.three, .grid.two { grid-template-columns: 1fr; }
+      .flow-row { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Multi-Agent Knowledge Platform</p>
+      <h1>知识库与 Agent 接入拓扑</h1>
+      <p class="subtitle">多终端统一接入，经网关与鉴权进入知识服务层，最终由 Markdown、向量库与元数据共同承载。</p>
+    </header>
+
+    <div class="canvas">
+      <section class="layer" aria-labelledby="terminal-title">
+        <div class="layer-head">
+          <h2 class="layer-title" id="terminal-title">终端层</h2>
+          <div><span class="badge">多设备 · 各自运行 Agent</span></div>
+        </div>
+        <div class="grid">
+          <div class="node">
+            <p class="node-title"><span class="device-index">01</span>MacBook</p>
+            <p class="node-copy">Claude Code<br>Hermes</p>
+          </div>
+          <div class="node">
+            <p class="node-title"><span class="device-index">02</span>Windows PC</p>
+            <p class="node-copy">Codex<br>Qoder</p>
+          </div>
+          <div class="node">
+            <p class="node-title"><span class="device-index">03</span>Linux 主机</p>
+            <p class="node-copy">OpenClaw<br>自研 Agent</p>
+          </div>
+          <div class="node">
+            <p class="node-title"><span class="device-index">04</span>手机 / 平板</p>
+            <p class="node-copy">只读查看</p>
+          </div>
+        </div>
+        <div class="path"><strong>连接方式</strong><span>HTTPS / MCP</span></div>
+      </section>
+
+      <div class="connector" aria-hidden="true">▼</div>
+
+      <section class="layer gateway" aria-labelledby="gateway-title">
+        <div class="layer-head">
+          <h2 class="layer-title" id="gateway-title">接入层</h2>
+          <div class="layer-note">云服务器 ECS / 轻量应用服务器</div>
+        </div>
+        <div class="flow-row">
+          <div class="node">
+            <p class="node-title">Nginx 反代</p>
+            <p class="node-copy">TLS 终结<br>统一入口</p>
+          </div>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <div class="node">
+            <p class="node-title">MCP Gateway</p>
+            <p class="node-copy">SSE / HTTP<br>协议接入</p>
+          </div>
+          <div class="flow-arrow" aria-hidden="true">→</div>
+          <div class="node">
+            <p class="node-title">鉴权 / 限流</p>
+            <p class="node-copy">API Key per 设备<br>访问控制</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="connector" aria-hidden="true">▼</div>
+
+      <section class="layer services" aria-labelledby="services-title">
+        <div class="layer-head">
+          <h2 class="layer-title" id="services-title">知识服务层</h2>
+          <div class="layer-note">同一台服务器上的容器 / 进程</div>
+        </div>
+        <div class="grid two">
+          <div class="node">
+            <p class="node-title">检索服务 RAG</p>
+            <p class="node-copy">向量召回 + BM25 + 重排</p>
+          </div>
+          <div class="node">
+            <p class="node-title">写入 / 摄取服务</p>
+            <p class="node-copy">解析 → 切片 → 向量化 → 入库<br>增量监听 Vault 变更</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="connector" aria-hidden="true">▼</div>
+
+      <section class="layer storage" aria-labelledby="storage-title">
+        <div class="layer-head">
+          <h2 class="layer-title" id="storage-title">存储层</h2>
+          <div class="layer-note">同一服务器 · 逻辑分三块</div>
+        </div>
+        <div class="grid three">
+          <div class="node">
+            <p class="node-title">Markdown Vault 主库</p>
+            <p class="node-copy">Git 管理 · 可读可追溯</p>
+          </div>
+          <div class="node">
+            <p class="node-title">向量库</p>
+            <p class="node-copy">pgvector / Chroma / Qdrant</p>
+          </div>
+          <div class="node">
+            <p class="node-title">元数据 / 关系</p>
+            <p class="node-copy">PostgreSQL / SQLite</p>
+          </div>
+        </div>
+        <div class="backup"><strong>异地容灾</strong>　对象存储 / 网盘快照 + Git 远端</div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
